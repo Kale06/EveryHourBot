@@ -3,6 +3,7 @@ import * as crypto from 'node:crypto'
 
 const USED_NUMBERS_PATH = "./usednumbers.txt"
 const MEDIA_DIR = "./media"
+const ALLOWED_FORMATS_DIR = './common/allowedFileFormats.txt'
 
 /**
  * Opens the media store folder and reads the contents. Returns an empty array if the directory doesn't exist.
@@ -10,12 +11,38 @@ const MEDIA_DIR = "./media"
 */
 const getMediaStore = async () => {
     try {
-        const media = await fs.readdir(MEDIA_DIR)
+        let media = await fs.readdir(MEDIA_DIR)
+        media = filterItems(media);
         return media
     } catch(e) {
         return [];
     }
 }
+
+/**
+ * Filter items to only accept specific formats of files
+ * Files are listed at ./common/allowedFileFormats.txt
+ * @returns Filtered array of all filedirs
+ */
+async function filterItems(mediaItems) {
+    try {
+        console.log("Filtering Files");
+        const formats = (await fs.readFile(ALLOWED_FORMATS_DIR, 'utf-8'))
+            .split('\n')
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        
+        const filteredMedias = mediaItems.filter(item => {
+            const ext = item.slice(item.lastIndexOf('.'));
+            return formats.includes(ext);
+        });
+
+        return filteredMedias;
+    } catch (e) {
+        return [];
+    }
+}
+
 
 //dump eet
 //need to use it outside of randomisation now
